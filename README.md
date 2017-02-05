@@ -63,7 +63,7 @@ http://localhost:8080/webpack-dev-server/index.html
 
 ![](./iframe.png)
 
-这个iframe页面会请求 live.bundle.js ,其中里面会新建一个 Iframe ，你的应用就被注入到了这个 Iframe 当中。同时 live.bundle.js 中含有 socket.io 的 client 代码，这样它就能和 webpack-dev-server 建立的 http server 进行 websocket 通讯了。并根据返回的信息完成相应的动作
+这个iframe页面会请求 live.bundle.js ,其中里面会新建一个 Iframe ，你的应用就被注入到了这个 Iframe 当中。同时 live.bundle.js 中含有 socket.io 的 client 代码，这样它就能和 webpack-dev-server 建立的 http server 进行 websocket 通讯了，并根据返回的信息完成相应的动作。(`总之，因为我们的http://localhost:8080/webpack-dev-server/index.html访问的时候加载了live.bundle.js，其具有websocket的client代码，所以当websocket-dev-server服务端代码发生变化的时候会通知到这个页面，这个页面只是需要重新刷新iframe中的页面就可以了`)
 
 该模式有如下作用:
 
@@ -99,9 +99,9 @@ URL changes in the app are reflected in the browser’s URL bar(URL的改变会�
 
 每一个模式都是支持Hot Module Replacement的，在HMR模式下，每一个文件都会被通知内容已经改变而不是重新加载整个页面。因此，在HMR执行的时候可以加载更新的模块，从而把他们注册到运行的应用里面。
 
-如何在nodejs中开启inline mode:
+##### 1.2.3 如何在nodejs中开启inline mode:
 
-在webpack-dev-server配置中没有inline:true去开启inline模式，因为webpack-dev-server模块无法访问webpack的配置。因此，用户必须添加webpack-dev-server的客户端入口文件到webpack的配置中，具体方式如下:
+在webpack-dev-server配置中没有inline:true去开启inline模式，`因为webpack-dev-server模块无法访问webpack的配置`。因此，用户必须添加webpack-dev-server的客户端入口文件到webpack的配置中，具体方式如下:
 
 方式1：To do this, simply add the following to all entry points: webpack-dev-server/client?http://«path»:«port»/,也就是在entry中添加一个内容:
 
@@ -154,7 +154,7 @@ function reloadApp() {
 }
 ```
 
-而在我们的webpack/hot/dev-server中的log都是以[HMR]开头的:
+而在我们的webpack/hot/dev-server中的log都是以[HMR]开头的(他是来自于webpack本身的一个plugin):
 
 ```js
 if(!updatedModules) {
@@ -530,16 +530,16 @@ open http://localhost:8080/webpack-dev-server/.
 
 
 
-
-
-
-
-
-
-
-
 参考文献:
 
 [详情介绍webpack-dev-server，iframe与inline的区别](http://blog.csdn.net/chengnuo628/article/details/52441977)
+
+[详解webpack-dev-server的使用](https://segmentfault.com/a/1190000006964335)
+
+[[译] Webpack 用来做模块热替换(hot module replacement)](https://segmentfault.com/a/1190000003872635)
+
+[React Actions Recorder 的模块热替换(HMR)](https://segmentfault.com/a/1190000003879041)  
+
+[Webpack——解决疑惑,让你明白](http://www.imooc.com/article/13357)  
 
 
