@@ -493,6 +493,36 @@ historyApiFallback: {
 },
 ```
 
+使用disableDotRule来满足一个需求，即如果一个资源请求包含一个`.`符号,那么表示是对某一个特定资源的请求，也就满足dotRule。我们看看[connect-history-api-fallback](https://github.com/liangklfang/connect-history-api-fallback)内部是如何处理的：
+
+```js
+ if (parsedUrl.pathname.indexOf('.') !== -1 &&
+        options.disableDotRule !== true) {
+      logger(
+        'Not rewriting',
+        req.method,
+        req.url,
+        'because the path includes a dot (.) character.'
+      );
+      return next();
+    }
+    rewriteTarget = options.index || '/index.html';
+    logger('Rewriting', req.method, req.url, 'to', rewriteTarget);
+    req.url = rewriteTarget;
+    next();
+  };
+```
+
+也就是说，如果是对绝对资源的请求，也就是满足dotRule,但是disableDotRule(disable dot rule file request)为false,表示我们会自己对满足dotRule的资源进行处理，所以不用定向到index.html中!如果disableDotRule为true表示我们不会对满足dotRule的资源进行处理，所以直接定向到index.html!
+
+
+```js
+history({
+  disableDotRule: true
+})
+```
+
+
 
 ### 5.组合一个已经存在的服务器
 
