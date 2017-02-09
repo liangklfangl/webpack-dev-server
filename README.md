@@ -572,4 +572,5 @@ open http://localhost:8080/webpack-dev-server/.
 
 [Webpack——解决疑惑,让你明白](http://www.imooc.com/article/13357)  
 
+[webpack-dev-serger官方文档](https://webpack.js.org/configuration/dev-server/#devserver-stats-)
 
