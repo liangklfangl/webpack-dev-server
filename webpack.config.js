@@ -10,7 +10,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "build"),
     publicPath: "/assets/",
-    filename: "bundle.js"
+    filename: "bundle.js",
+    contentBase:'./build'
   }//,
   //inline mode在此配置或者在command line中加入--inline
   // devServer:{

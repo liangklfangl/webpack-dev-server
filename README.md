@@ -1,17 +1,37 @@
-如果你想深入了解webpack-dev-server的内部原理，你可以查看我写的[这个打包工具](https://github.com/liangklfangl/wcf)，通过它可以完成三种打包方式，其中devServer模式就是通过webpack-dev-server来完成的，并且支持HMR。对于webpack的HMR不了解的可以[查看这里](https://github.com/liangklfangl/webpack-hmr)。其中也牵涉到[webpack-dev-middleware中间件](https://github.com/liangklfang/webpack-dev-middleware)。如果觉得有用，记得start哦~~~
+如果你想深入了解webpack-dev-server的内部原理，你可以查看我写的[这个打包工具](https://github.com/liangklfangl/wcf)，通过它可以完成三种打包方式，其中devServer模式就是通过webpack-dev-server来完成的，并且支持HMR。对于webpack的HMR不了解的可以[查看这里](https://github.com/liangklfangl/webpack-hmr)。其中也牵涉到[webpack-dev-middleware中间件](https://github.com/liangklfang/webpack-dev-middleware)。如果觉得有用，记得start哦~
 
 ### 1.webpack-dev-server配置
 
 #### 1.1 ContentBase
 
-webpack-dev-server会使用当前的路径作为请求的资源路径，但是你可以通过指定content base来修改这个默认行为:
+webpack-dev-server会使用当前的路径作为请求的资源路径(所谓`当前的路径`就是你运行webpack-dev-server这个命令的路径，如果你对webpack-dev-server进行了包装，比如[wcf](https://github.com/liangklfangl/wcf),那么当前路径指的就是运行wcf命令的路径,一般是项目的根路径)，但是你可以通过指定content base来修改这个默认行为:
 
 ```js
 $ webpack-dev-server --content-base build/
 ```
 
-这样webpack-dev-server就会使用build目录下的文件来处理网络请求。他会监听资源文件，当他们改变的时候会自动编译。这些改变的bundle将会从内存中直接拿出来进而处理网络请求(所谓的改变的bundle指的就是,相对你在publicPath中指定的路径的资源)，而不会被写出到我们的output路径下面。`如果一个已经存在的bundle具有相同的URL，那么我们也会使用内存中的资源来替换`他!比如我们有一个如下的配置:
+这样webpack-dev-server就会使用`build目录`下的资源来处理静态资源的请求，比如`css/图片等`。content-base一般不要和publicPath,output.path混淆掉。其中content-base表示`静态资源`的路径是什么,比如下面的例子:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+  <div id="react-content">这里要插入js内容</div>
+</body>
+</html>
+```
+在作为html-webpack-plugin的template以后，那么上面的`index.css`路径到底是什么?是相对于谁来说?上面我已经强调了:如果在没有指定content-base的情况下就是相对于`当前路径`来说的，所谓的当前路径就是在运行webpack-dev-server目录来说的，所以假如你在项目根路径运行了这个命令，那么你就要保证在项目根路径下存在该index.css资源，否则就会存在html-webpack-plugin的404报错。当然，为了解决这个问题，你可以将content-base修改为和html-webpack-plugin的html模板一样的目录。
 
+上面讲到content-base只是和静态资源的请求有关，那么我们将其和`publicPath`和`output.path`做一个区分:
+
+首先:假如你将output.path设置为`build`(这里的build和content-base的build没有任何关系，请不要混淆),你要知道webpack-dev-server实际上并没有将这些打包好的bundle写到这个目录下，而是存在于内存中的，但是我们可以`假设`(注意这里是假设)其是写到这个目录下的
+
+然后：这些打包好的bundle在被请求的时候，其路径是相对于你配置的`publicPath`来说的，因为我的理解publicPath相当于虚拟路径，其映射于你指定的`output.path`。假如你指定的publicPath为 "/assets/",而且output.path为"build",那么相当于虚拟路径"/assets/"对应于"build"(前者和后者指向的是同一个位置)，而如果build下有一个"index.css"，那么通过虚拟路径访问就是`/assets/index.css`。
+
+最后:如果某一个内存路径(文件写在内存中)已经存在特定的bundle，而且编译后内存中有新的资源，那么我们也会使用新的内存中的资源来处理该请求，而不是使用旧的bundle!比如我们有一个如下的配置:
 ```js
 module.exports = {
   entry: {
@@ -20,12 +40,13 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "build"),
     publicPath: "/assets/",
+    //此时相当于/assets/路径对应于build目录，是一个映射的关系
     filename: "bundle.js"
   }
 }
 ```
 
-那么我们要访问编译后的资源可以通过localhost:8080/assets/bundle.js来访问。如果我们在build目录下有一个文件，那么我们可以使用下面的方式来访问js资源:
+那么我们要访问编译后的资源可以通过localhost:8080/assets/bundle.js来访问。如果我们在build目录下有一个html文件，那么我们可以使用下面的方式来访问js资源
 
 ```html
 <!DOCTYPE html>
@@ -45,12 +66,13 @@ module.exports = {
 ![](./contentbase.png)
 
 主要关注下面两句输出:
-
+<pre>
 Webpack result is served from /assets/
+Content is served from /users/…./build
+</pre>
+之所以是这样的输出结果是因为我们设置了contentBase为build,因为我们运行的命令为`webpack-dev-server --content-base build/`。所以，一般情况下：如果在html模板中不存在对外部相对资源的引用,我们并不需要指定content-base，但是如果存在对外部相对资源css/图片的引用，我们可以通过指定content-base来设置默认静态资源加载的路径，除非你所有的静态资源全部在`当前目录下`。但是，在wcf中，如果你指定的htmlTemplate，那么我会默认将content-base设置为htmlTemplate同样的路径，所以在htmlTemplate中你可以随意`使用相对路径`引用外部的css/图片。
 
-Content is served from /users/…./build(因为我们设置了contentBase)
-
-`注意：我们此时通过http://localhost:8080/index.html来访问build下的index.html;同时，我们的会发现在build目录下并没有生成我们的bundle.js文件本身`。也就是说，此时我们的静态文件全部从build目录来获取，我们生成的静态文件bundle.js也在build目录之下，不过要访问它必须要加上publicPath路径才可以！我们看看webpack-dev-server中是如何处理的:
+我们看看webpack-dev-server中是如何处理的:
 
 ```js
 contentBaseFiles: function() {
@@ -110,7 +132,7 @@ contentBaseFiles: function() {
       }
     }
 ```
-
+注意：在webpack2中--content-base在webpack.config.js中配置也是可以生效的，建议使用一下我上面的wcf打包工具!!!!
 
 #### 1.2 自动刷新
 
