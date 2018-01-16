@@ -340,6 +340,7 @@ devServer: {
     proxy: {
       "/msg/show.htm": {
         target: "http://11.160.119.131/",
+        // 必须注意:这里要含有http://前缀
         secure: false
       }
     }
