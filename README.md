@@ -1,4 +1,5 @@
 如果你想深入了解webpack-dev-server的内部原理，你可以查看我写的[这个打包工具](https://github.com/liangklfangl/wcf)，通过它可以完成三种打包方式，其中devServer模式就是通过webpack-dev-server来完成的，并且支持HMR。对于webpack的HMR不了解的可以[查看这里](https://github.com/liangklfangl/webpack-hmr)。其中也牵涉到[webpack-dev-middleware中间件](https://github.com/liangklfang/webpack-dev-middleware)。如果觉得有用，记得start哦~
+这篇文章来自于我的[github文章全集](https://github.com/liangklfangl/react-article-bucket)
 
 ### 1.webpack-dev-server配置
 
